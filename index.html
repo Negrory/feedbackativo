@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.googleapis.com https://*.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co; connect-src 'self' https://* wss://*; img-src 'self' data: https: chrome-extension:;">
+    <title>FeedBack Ativo</title>
+    <meta property="og:image" content="/feedbackativo-oficial/og-image.png" />
+    <meta name="description" content="Sistema de feedback oi ativo para veículos">
+    <meta name="author" content="FeedBack Ativo">
+    <link rel="icon" type="image/png" href="/feedbackativo-oficial/favicon.png" />
+    <link rel="apple-touch-icon" href="/feedbackativo-oficial/apple-touch-icon.png" />
+    <link rel="shortcut icon" href="/feedbackativo-oficial/favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
+    <script type="text/javascript">
+      (function(l) {
+        const basename = '/feedbackativo-oficial';
+        
+        // Se a URL não contiver o basename, redirecionar
+        if (!l.pathname.includes(basename)) {
+          l.replace(
+            l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+            basename + l.pathname +
+            (l.search || '') +
+            (l.hash || '')
+          );
+          return;
+        }
+
+        // Redirecionar 404 para index.html
+        if (l.pathname.endsWith('/404.html')) {
+          const newPath = l.pathname.replace('/404.html', '');
+          l.replace(
+            l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+            basename + '/' + (l.hash || '')
+          );
+        }
+      }(window.location))
+    </script>
+    <base href="/feedbackativo-oficial/" />
+    <script type="module" crossorigin src="./assets/index-Ct1t4Igu-1742959677451.js"></script>
+    <link rel="modulepreload" crossorigin href="./assets/vendor-BlkewUz6-1742959677451.js">
+    <link rel="stylesheet" crossorigin href="./assets/index-nRwyLaDq-1742959677451.css">
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <!-- IMPORTANT: DO NOT REMOVE THIS SCRIPT TAG OR THIS VERY COMMENT! -->
+    <script src="https://cdn.gpteng.co/gptengineer.js" type="module"></script>
+  </body>
+</html>
