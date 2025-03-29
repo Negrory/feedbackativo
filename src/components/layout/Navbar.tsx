@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { HashLinkWrapper as Link } from '@/router/HashLinkWrapper';
+import { useLocation } from 'react-router-dom';
 import { Menu, X, Search, Car, BarChart3, ClipboardCheck, RefreshCw, AlertTriangle, LayoutDashboard, FileText, CheckSquare, Building, BarChart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';

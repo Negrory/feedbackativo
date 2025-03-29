@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHashNavigate } from '@/router/useHashNavigate';
 import {
   Wrench,
   Building,
@@ -150,7 +150,7 @@ const servicosOptions = [
 ];
 
 const Oficinas = () => {
-  const navigate = useNavigate();
+  const navigate = useHashNavigate();
   const [oficinas, setOficinas] = useState<Oficina[]>([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHashNavigate } from '@/router/useHashNavigate';
 import {
   Car,
   Search,
@@ -182,7 +182,7 @@ const mockVehicles: Vehicle[] = [
 ];
 
 const Veiculos = () => {
-  const navigate = useNavigate();
+  const navigate = useHashNavigate();
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);

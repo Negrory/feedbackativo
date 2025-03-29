@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { HashLinkWrapper as Link } from '@/router/HashLinkWrapper';
 import { Car } from 'lucide-react';
 
 const Footer = () => {

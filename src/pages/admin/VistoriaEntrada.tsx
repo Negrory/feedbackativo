@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useHashNavigate } from '@/router/useHashNavigate';
+import { useLocation } from 'react-router-dom';
 import { Camera, Car, Upload, Plus, Check, X, Info, AlertTriangle, ChevronDown, FileText, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -245,7 +246,7 @@ const VideoUploader = ({ title, description, videos, setVideos }) => {
 };
 
 const VistoriaEntrada = () => {
-  const navigate = useNavigate();
+  const navigate = useHashNavigate();
   const [veiculoSelecionado, setVeiculoSelecionado] = useState<Veiculo | null>(null);
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
   const [loading, setLoading] = useState(false);

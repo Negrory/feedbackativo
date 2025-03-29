@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Car, 
   AlertCircle, 
@@ -53,6 +53,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { HashLinkWrapper as Link } from '@/router/HashLinkWrapper';
+import { useHashNavigate } from '@/router/useHashNavigate';
 
 interface Vehicle {
   id: string;
@@ -142,6 +144,8 @@ const Dashboard = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const navigate = useHashNavigate();
+
   // Calcular total de páginas
   const totalPages = Math.ceil(filteredVehicles.length / itemsPerPage);
 
@@ -188,7 +192,7 @@ const Dashboard = () => {
 
   const handleNovaAtualizacao = () => {
     // Redirecionar para a página de nova atualização com a placa pré-selecionada
-    window.location.href = `#/admin/atualizacoes?plate=${veiculoSelecionado?.plate}`;
+    navigate(`/admin/atualizacoes?plate=${veiculoSelecionado?.plate}`);
   };
 
   const handleAprovarFeedback = (id: string) => {
@@ -230,17 +234,17 @@ const Dashboard = () => {
             
             <div className="mt-4 md:mt-0 flex space-x-3">
               <Button asChild variant="outline">
-                <a href="/admin/relatorios">
+                <Link to="/admin/relatorios">
                   <BarChart3 className="w-4 h-4 mr-2" />
                   Relatórios
-                </a>
+                </Link>
               </Button>
 
               <Button asChild>
-                <a href="/admin/adicionar-veiculo">
+                <Link to="/admin/adicionar-veiculo">
                   <Car className="w-4 h-4 mr-2" />
                   Adicionar Veículo
-                </a>
+                </Link>
               </Button>
 
 
@@ -268,10 +272,10 @@ const Dashboard = () => {
                 </p>
                 
                 <Button asChild variant="ghost" size="sm" className="text-xs">
-                  <a href="#/admin/relatorios">
+                  <Link to="/admin/relatorios">
                     Ver detalhes
                     <ArrowUpRight className="w-3 h-3 ml-1" />
-                  </a>
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -296,10 +300,10 @@ const Dashboard = () => {
                 </p>
                 
                 <Button asChild variant="ghost" size="sm" className="text-xs">
-                  <a href="#/admin/atualizacoes">
+                  <Link to="/admin/atualizacoes">
                     Atualizar
                     <ArrowUpRight className="w-3 h-3 ml-1" />
-                  </a>
+                  </Link>
                 </Button>
               </div>
             </div>
@@ -324,10 +328,10 @@ const Dashboard = () => {
                 </p>
                 
                 <Button asChild variant="ghost" size="sm" className="text-xs">
-                  <a href="#/admin/relatorios">
+                  <Link to="/admin/relatorios">
                     Ver detalhes
                     <ArrowUpRight className="w-3 h-3 ml-1" />
-                  </a>
+                  </Link>
                 </Button>
               </div>
             </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHashNavigate } from '@/router/useHashNavigate';
 import {
   BarChart3, 
   PieChart, 
@@ -148,7 +148,7 @@ const veiculosAtrasadosTeste: VeiculoAtrasado[] = [
 ];
 
 const Relatorios = () => {
-  const navigate = useNavigate();
+  const navigate = useHashNavigate();
   
   // Estado para controle de filtros
   const [filtroData, setFiltroData] = useState('mes');
