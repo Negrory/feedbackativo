@@ -5,6 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  base: '/feedbackativo/',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
@@ -20,9 +21,9 @@ export default defineConfig(({ mode }) => ({
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
         },
-        entryFileNames: `assets/[name]-[hash]-${new Date().getTime()}.js`,
-        chunkFileNames: `assets/[name]-[hash]-${new Date().getTime()}.js`,
-        assetFileNames: `assets/[name]-[hash]-${new Date().getTime()}.[ext]`
+        entryFileNames: `assets/[name]-[hash].js`,
+        chunkFileNames: `assets/[name]-[hash].js`,
+        assetFileNames: `assets/[name]-[hash].[ext]`
       }
     }
   },
