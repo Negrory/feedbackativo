@@ -5,10 +5,10 @@ import { componentTagger } from "lovable-tagger";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  base: 'https://negrory.github.io/feedbackativo/',
+  base: '/feedbackativo/',
   build: {
     outDir: 'dist',
-    assetsDir: 'assets',
+    assetsDir: '',
     sourcemap: mode === 'development',
     minify: 'terser',
     terserOptions: {
@@ -21,9 +21,9 @@ export default defineConfig(({ mode }) => ({
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom']
         },
-        entryFileNames: 'assets/[name].[hash].js',
-        chunkFileNames: 'assets/[name].[hash].js',
-        assetFileNames: 'assets/[name].[hash].[ext]'
+        entryFileNames: '[name].[hash].js',
+        chunkFileNames: '[name].[hash].js',
+        assetFileNames: '[name].[hash].[ext]'
       }
     }
   },
