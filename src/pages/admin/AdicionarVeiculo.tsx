@@ -13,19 +13,17 @@ import Footer from '@/components/layout/Footer';
 interface VeiculoSGA {
   placa: string;
   modelo: string;
-  cor: string;
   chassi: string;
-  tipoCombustivel: string;
   cpfCnpj: string;
   nomeCliente: string;
   telefoneCliente: string;
   renavam: string;
   valorFipe: number;
+  nome_voluntario: string;
 }
 
 interface FormData extends VeiculoSGA {
   oficina: string;
-  regional: string;
   consultor: string;
   isTerceiro: boolean;
 }
@@ -38,13 +36,10 @@ const AdicionarVeiculo = () => {
   const [formData, setFormData] = useState<Partial<FormData>>({
     placa: '',
     oficina: '',
-    regional: '',
     consultor: '',
     isTerceiro: false,
     modelo: '',
-    cor: '',
     chassi: '',
-    tipoCombustivel: '',
     cpfCnpj: '',
     nomeCliente: '',
     telefoneCliente: '',
@@ -101,18 +96,15 @@ const AdicionarVeiculo = () => {
       const veiculoData = {
         placa: formData.placa,
         modelo: veiculo.modelo || '',
-        cor: veiculo.codigo_cor ? `Código: ${veiculo.codigo_cor}` : '',
         chassi: veiculo.chassi || '',
-        tipoCombustivel: veiculo.codigo_combustivel ? `Código: ${veiculo.codigo_combustivel}` : '',
         cpfCnpj: veiculo.cpf || '',
         nomeCliente: veiculo.nome || '',
         telefoneCliente: veiculo.telefone ? `(${veiculo.ddd || ''}) ${veiculo.telefone}` : '',
         renavam: veiculo.renavam || '',
         valorFipe: parseFloat(veiculo.valor_fipe || '0'),
+        consultor: veiculo.nome_voluntario || '',
         // Mantém os valores existentes dos campos não preenchidos pela API
         oficina: formData.oficina || '',
-        regional: formData.regional || '',
-        consultor: formData.consultor || '',
         isTerceiro: formData.isTerceiro || false
       };
 
@@ -148,7 +140,7 @@ const AdicionarVeiculo = () => {
     e.preventDefault();
     
     // Validação dos campos obrigatórios
-    if (!formData.placa || !formData.renavam || !formData.oficina || !formData.regional || !formData.consultor) {
+    if (!formData.placa || !formData.renavam || !formData.oficina || !formData.consultor) {
       toast({
         title: "Erro",
         description: "Por favor, preencha todos os campos obrigatórios.",
@@ -184,13 +176,10 @@ const AdicionarVeiculo = () => {
       setFormData({
         placa: '',
         oficina: '',
-        regional: '',
         consultor: '',
         isTerceiro: false,
         modelo: '',
-        cor: '',
         chassi: '',
-        tipoCombustivel: '',
         cpfCnpj: '',
         nomeCliente: '',
         telefoneCliente: '',
@@ -289,43 +278,18 @@ const AdicionarVeiculo = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="regional" className="flex items-center space-x-1">
-                      <span>Regional</span>
-                      <span className="text-red-500">*</span>
-                    </Label>
-                    <Select
-                      value={formData.regional}
-                      onValueChange={(value) => handleInputChange('regional', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione a regional" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="sp">São Paulo</SelectItem>
-                        <SelectItem value="rj">Rio de Janeiro</SelectItem>
-                        <SelectItem value="mg">Minas Gerais</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
                     <Label htmlFor="consultor" className="flex items-center space-x-1">
                       <span>Consultor</span>
                       <span className="text-red-500">*</span>
                     </Label>
-                    <Select
+                    <Input
+                      id="consultor"
                       value={formData.consultor}
-                      onValueChange={(value) => handleInputChange('consultor', value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o consultor" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="joao">João Silva</SelectItem>
-                        <SelectItem value="maria">Maria Santos</SelectItem>
-                        <SelectItem value="pedro">Pedro Oliveira</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      onChange={(e) => handleInputChange('consultor', e.target.value)}
+                      placeholder="Nome do consultor"
+                      disabled={!preenchimentoManual && !formData.consultor}
+                      required
+                    />
                   </div>
 
                   <div className="flex items-center space-x-2">
@@ -350,29 +314,11 @@ const AdicionarVeiculo = () => {
                   </div>
 
                   <div>
-                    <Label>Cor</Label>
-                    <Input
-                      value={formData.cor}
-                      onChange={(e) => handleInputChange('cor', e.target.value)}
-                      disabled={!preenchimentoManual && !formData.cor}
-                    />
-                  </div>
-
-                  <div>
                     <Label>Chassi</Label>
                     <Input
                       value={formData.chassi}
                       onChange={(e) => handleInputChange('chassi', e.target.value)}
                       disabled={!preenchimentoManual && !formData.chassi}
-                    />
-                  </div>
-
-                  <div>
-                    <Label>Tipo de Combustível</Label>
-                    <Input
-                      value={formData.tipoCombustivel}
-                      onChange={(e) => handleInputChange('tipoCombustivel', e.target.value)}
-                      disabled={!preenchimentoManual && !formData.tipoCombustivel}
                     />
                   </div>
 
@@ -436,7 +382,7 @@ const AdicionarVeiculo = () => {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={!formData.placa || !formData.renavam || !formData.oficina || !formData.regional || !formData.consultor}
+                  disabled={!formData.placa || !formData.renavam || !formData.oficina || !formData.consultor}
                 >
                   Adicionar Veículo
                 </Button>

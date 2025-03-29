@@ -5,13 +5,26 @@ import {
   CheckCircle, 
   Clock, 
   BarChart3, 
-  PieChart, 
+  PieChart as PieChartIcon, 
   ArrowUpRight, 
   Plus,
   Eye,
   FileText,
   Clock3
 } from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend
+} from 'recharts';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import Navbar from '@/components/layout/Navbar';
@@ -31,6 +44,15 @@ import {
 } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface Vehicle {
   id: string;
@@ -89,6 +111,22 @@ const mockFeedbacksPendentes: Feedback[] = [
   }
 ];
 
+// Dados para o gráfico de barras
+const feedbacksPorOficina = [
+  { name: 'Oficina Central', feedbacks: 65 },
+  { name: 'Oficina Sul', feedbacks: 45 },
+  { name: 'Oficina Norte', feedbacks: 38 },
+  { name: 'Oficina Leste', feedbacks: 28 },
+  { name: 'Oficina Oeste', feedbacks: 22 },
+];
+
+// Dados para o gráfico de pizza
+const distribuicaoStatus = [
+  { name: 'Em Andamento', value: 45, color: '#FFA500' },
+  { name: 'Atrasados', value: 15, color: '#FF4444' },
+  { name: 'Finalizados', value: 40, color: '#00C853' },
+];
+
 const Dashboard = () => {
   const delayedVehicles = mockVehicles.filter(v => v.status === 'delayed');
   const inProgressVehicles = mockVehicles.filter(v => v.status === 'inprogress');
@@ -101,6 +139,32 @@ const Dashboard = () => {
   const [veiculoSelecionado, setVeiculoSelecionado] = useState<Vehicle | null>(null);
   const [feedbacksAprovados, setFeedbacksAprovados] = useState<Feedback[]>(mockFeedbacksAprovados);
   const [feedbacksPendentes, setFeedbacksPendentes] = useState<Feedback[]>(mockFeedbacksPendentes);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Calcular total de páginas
+  const totalPages = Math.ceil(filteredVehicles.length / itemsPerPage);
+
+  // Obter veículos da página atual
+  const getCurrentPageVehicles = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredVehicles.slice(startIndex, endIndex);
+  };
+
+  // Gerar array de páginas para navegação
+  const getPageNumbers = () => {
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
+  // Handler para mudança de página
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
@@ -124,7 +188,7 @@ const Dashboard = () => {
 
   const handleNovaAtualizacao = () => {
     // Redirecionar para a página de nova atualização com a placa pré-selecionada
-    window.location.href = `/feedbackativo-oficial/admin/atualizacoes?plate=${veiculoSelecionado?.plate}`;
+    window.location.href = `#/admin/atualizacoes?plate=${veiculoSelecionado?.plate}`;
   };
 
   const handleAprovarFeedback = (id: string) => {
@@ -166,25 +230,20 @@ const Dashboard = () => {
             
             <div className="mt-4 md:mt-0 flex space-x-3">
               <Button asChild variant="outline">
-                <a href="/feedbackativo-oficial/admin/relatorios">
+                <a href="#/admin/relatorios">
                   <BarChart3 className="w-4 h-4 mr-2" />
                   Relatórios
                 </a>
               </Button>
-              
-              <Button asChild>
-                <a href="/feedbackativo-oficial/admin/vistoria-entrada">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Nova Vistoria
-                </a>
-              </Button>
 
-              <Button asChild variant="secondary">
-                <a href="/feedbackativo-oficial/admin/adicionar-veiculo">
+              <Button asChild>
+                <a href="#/admin/adicionar-veiculo">
                   <Car className="w-4 h-4 mr-2" />
                   Adicionar Veículo
                 </a>
               </Button>
+
+
             </div>
           </div>
           
@@ -209,7 +268,7 @@ const Dashboard = () => {
                 </p>
                 
                 <Button asChild variant="ghost" size="sm" className="text-xs">
-                  <a href="/feedbackativo-oficial/admin/relatorios">
+                  <a href="#/admin/relatorios">
                     Ver detalhes
                     <ArrowUpRight className="w-3 h-3 ml-1" />
                   </a>
@@ -237,7 +296,7 @@ const Dashboard = () => {
                 </p>
                 
                 <Button asChild variant="ghost" size="sm" className="text-xs">
-                  <a href="/feedbackativo-oficial/admin/atualizacoes">
+                  <a href="#/admin/atualizacoes">
                     Atualizar
                     <ArrowUpRight className="w-3 h-3 ml-1" />
                   </a>
@@ -265,7 +324,7 @@ const Dashboard = () => {
                 </p>
                 
                 <Button asChild variant="ghost" size="sm" className="text-xs">
-                  <a href="/feedbackativo-oficial/admin/relatorios">
+                  <a href="#/admin/relatorios">
                     Ver detalhes
                     <ArrowUpRight className="w-3 h-3 ml-1" />
                   </a>
@@ -283,25 +342,48 @@ const Dashboard = () => {
                 </h3>
               </div>
               
-              <div className="h-64 flex items-center justify-center">
-                <p className="text-gray-500 dark:text-gray-400 text-sm">
-                  Gráfico de barras seria exibido aqui
-                </p>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={feedbacksPorOficina}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={60} />
+                    <YAxis />
+                    <Tooltip />
+                    <Bar dataKey="feedbacks" fill="#3B82F6" />
+                  </BarChart>
+                </ResponsiveContainer>
               </div>
             </div>
             
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
-                  <PieChart className="w-5 h-5 mr-2" />
+                  <PieChartIcon className="w-5 h-5 mr-2" />
                   Distribuição de Status
                 </h3>
               </div>
               
-              <div className="h-64 flex items-center justify-center">
-                <p className="text-gray-500 dark:text-gray-400 text-sm">
-                  Gráfico de pizza seria exibido aqui
-                </p>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={distribuicaoStatus}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {distribuicaoStatus.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </div>
           </div>
@@ -333,7 +415,7 @@ const Dashboard = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredVehicles.map((vehicle) => (
+                  {getCurrentPageVehicles().map((vehicle) => (
                     <tr key={vehicle.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/30">
                       <td className="px-6 py-4 font-medium">{vehicle.plate}</td>
                       <td className="px-6 py-4">{vehicle.model}</td>
@@ -366,9 +448,44 @@ const Dashboard = () => {
               </table>
             </div>
             
-            {filteredVehicles.length === 0 && (
+            {filteredVehicles.length === 0 ? (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                 Nenhum veículo encontrado na busca.
+              </div>
+            ) : (
+              <div className="mt-4 flex items-center justify-between">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  Mostrando {((currentPage - 1) * itemsPerPage) + 1} a {Math.min(currentPage * itemsPerPage, filteredVehicles.length)} de {filteredVehicles.length} veículos
+                </p>
+                
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+
+                    {getPageNumbers().map((page) => (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => handlePageChange(page)}
+                          isActive={currentPage === page}
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    ))}
+
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             )}
           </div>

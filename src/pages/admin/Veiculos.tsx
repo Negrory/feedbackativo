@@ -14,7 +14,10 @@ import {
   ClipboardCheck,
   RefreshCw,
   Camera,
-  AlertTriangle
+  AlertTriangle,
+  Eye,
+  Edit,
+  Trash2
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -62,6 +65,8 @@ import {
 import { toast } from '@/hooks/use-toast';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import { SearchBar } from '@/components/ui/SearchBar';
+import { StatusBadge } from '@/components/ui/StatusBadge';
 
 interface Veiculo {
   placa: string;
@@ -79,6 +84,16 @@ interface FeedbackHistorico {
   descricao: string;
   consultor: string;
   status: string;
+}
+
+interface Vehicle {
+  id: string;
+  plate: string;
+  model: string;
+  workshop: string;
+  lastUpdate: string;
+  status: 'inprogress' | 'delayed' | 'completed';
+  daysDelayed: number;
 }
 
 const veiculosTeste: Veiculo[] = [
@@ -155,6 +170,17 @@ const historicoTeste: FeedbackHistorico[] = [
   }
 ];
 
+const mockVehicles: Vehicle[] = [
+  { id: '1', plate: 'ABC1234', model: 'Toyota Corolla', workshop: 'Oficina Central', lastUpdate: '28/03/2023', status: 'inprogress' as const, daysDelayed: 0 },
+  { id: '2', plate: 'DEF5678', model: 'Honda Civic', workshop: 'Oficina Sul', lastUpdate: '20/03/2023', status: 'delayed' as const, daysDelayed: 4 },
+  { id: '3', plate: 'GHI9012', model: 'Volkswagen Golf', workshop: 'Oficina Norte', lastUpdate: '25/03/2023', status: 'inprogress' as const, daysDelayed: 0 },
+  { id: '4', plate: 'JKL3456', model: 'Fiat Pulse', workshop: 'Oficina Central', lastUpdate: '18/03/2023', status: 'delayed' as const, daysDelayed: 6 },
+  { id: '5', plate: 'MNO7890', model: 'Jeep Compass', workshop: 'Oficina Leste', lastUpdate: '26/03/2023', status: 'inprogress' as const, daysDelayed: 0 },
+  { id: '6', plate: 'PQR1234', model: 'Chevrolet Onix', workshop: 'Oficina Oeste', lastUpdate: '27/03/2023', status: 'inprogress' as const, daysDelayed: 0 },
+  { id: '7', plate: 'STU5678', model: 'Hyundai HB20', workshop: 'Oficina Sul', lastUpdate: '15/03/2023', status: 'completed' as const, daysDelayed: 0 },
+  { id: '8', plate: 'VWX9012', model: 'Renault Kwid', workshop: 'Oficina Norte', lastUpdate: '10/03/2023', status: 'completed' as const, daysDelayed: 0 },
+];
+
 const Veiculos = () => {
   const navigate = useNavigate();
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
@@ -163,6 +189,8 @@ const Veiculos = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedVeiculo, setSelectedVeiculo] = useState<Veiculo | null>(null);
   const [historicoFeedbacks, setHistoricoFeedbacks] = useState<FeedbackHistorico[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredVehicles, setFilteredVehicles] = useState<Vehicle[]>(mockVehicles);
 
   // Estados para filtros
   const [filtros, setFiltros] = useState({
@@ -252,6 +280,45 @@ const Veiculos = () => {
     navigate(`/admin/vistoria-entrada?placa=${placa}`);
   };
 
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (query) {
+      setFilteredVehicles(
+        mockVehicles.filter(
+          v => v.plate.toLowerCase().includes(query.toLowerCase()) || 
+               v.model.toLowerCase().includes(query.toLowerCase()) ||
+               v.workshop.toLowerCase().includes(query.toLowerCase())
+        )
+      );
+    } else {
+      setFilteredVehicles(mockVehicles);
+    }
+  };
+
+  const handleVerDetalhes = (id: string) => {
+    // Implementar visualização de detalhes
+    toast({
+      title: "Visualizar detalhes",
+      description: "Funcionalidade em desenvolvimento.",
+    });
+  };
+
+  const handleEditar = (id: string) => {
+    // Implementar edição
+    toast({
+      title: "Editar veículo",
+      description: "Funcionalidade em desenvolvimento.",
+    });
+  };
+
+  const handleExcluir = (id: string) => {
+    // Implementar exclusão
+    toast({
+      title: "Excluir veículo",
+      description: "Funcionalidade em desenvolvimento.",
+    });
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -263,13 +330,6 @@ const Veiculos = () => {
             Veículos
           </h1>
           <div className="space-x-4">
-            <Button
-              onClick={() => navigate('/admin/vistoria-entrada')}
-              variant="outline"
-            >
-              <ClipboardCheck className="h-4 w-4 mr-2" />
-              Vistoria Entrada
-            </Button>
             <Button
               onClick={() => navigate('/admin/atualizacoes')}
               variant="outline"
@@ -283,13 +343,6 @@ const Veiculos = () => {
             >
               <Clock className="h-4 w-4 mr-2" />
               Aguardando Aprovação
-            </Button>
-            <Button
-              onClick={() => navigate('/admin/oficinas')}
-              variant="outline"
-            >
-              <Wrench className="h-4 w-4 mr-2" />
-              Gerenciar Oficinas
             </Button>
             <Button
               onClick={() => navigate('/admin/adicionar-veiculo')}

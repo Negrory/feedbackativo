@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Car } from 'lucide-react';
@@ -16,14 +15,14 @@ const Footer = () => {
           </div>
           
           <div className="flex space-x-6">
-            <Link to="/" className="text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-white text-sm transition-colors duration-200">
+            <Link to="/" className="text-gray-400 hover:text-white transition-colors">
               Home
             </Link>
-            <Link to="/consulta" className="text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-white text-sm transition-colors duration-200">
+            <Link to="/consulta" className="text-gray-400 hover:text-white transition-colors">
               Consulta
             </Link>
-            <Link to="/admin/dashboard" className="text-gray-600 hover:text-primary dark:text-gray-400 dark:hover:text-white text-sm transition-colors duration-200">
-              Administração
+            <Link to="/admin/dashboard" className="text-gray-400 hover:text-white transition-colors">
+              Área Administrativa
             </Link>
           </div>
         </div>
