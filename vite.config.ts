@@ -20,15 +20,6 @@ export default defineConfig(({ mode }) => ({
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom']
-        },
-        entryFileNames: 'assets/[name].[hash].js',
-        chunkFileNames: 'assets/[name].[hash].js',
-        assetFileNames: (assetInfo) => {
-          const fileName = assetInfo.name || '';
-          if (/\.(png|jpe?g|gif|svg|ico)$/.test(fileName)) {
-            return `[name][extname]`;
-          }
-          return `assets/[name].[hash][extname]`;
         }
       }
     }
