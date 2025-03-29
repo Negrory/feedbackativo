@@ -230,14 +230,14 @@ const Dashboard = () => {
             
             <div className="mt-4 md:mt-0 flex space-x-3">
               <Button asChild variant="outline">
-                <a href="#/admin/relatorios">
+                <a href="/admin/relatorios">
                   <BarChart3 className="w-4 h-4 mr-2" />
                   Relatórios
                 </a>
               </Button>
 
               <Button asChild>
-                <a href="#/admin/adicionar-veiculo">
+                <a href="/admin/adicionar-veiculo">
                   <Car className="w-4 h-4 mr-2" />
                   Adicionar Veículo
                 </a>
