@@ -49,4 +49,9 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  experimental: {
+    renderBuiltUrl(filename: string) {
+      return `/feedbackativo/assets/${filename}`
+    }
+  }
 }));
