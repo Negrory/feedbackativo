@@ -5,40 +5,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.googleapis.com https://*.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.gpteng.co https://negrory.github.io; connect-src 'self' https://* wss://*; img-src 'self' data: https: chrome-extension:; base-uri 'self';">
     <title>FeedBack Ativo</title>
-    <meta property="og:image" content="/feedbackativo/og-image.png" />
     <meta name="description" content="Sistema de feedback ativo para veículos">
     <meta name="author" content="FeedBack Ativo">
-    <link rel="icon" type="image/png" href="/feedbackativo/favicon.png" />
-    <link rel="apple-touch-icon" href="/feedbackativo/apple-touch-icon.png" />
-    <link rel="shortcut icon" href="/feedbackativo/favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Open+Sans&display=swap" rel="stylesheet">
     <script type="text/javascript">
-      (function(l) {
-        const basename = '/feedbackativo';
-        const currentPath = l.pathname;
+      (function() {
+        // Determina se estamos em produção (GitHub Pages) ou desenvolvimento local
+        const isProduction = window.location.hostname === 'negrory.github.io';
+        const basePath = isProduction ? '/feedbackativo' : '';
         
-        // Se a URL não contiver o basename, redirecionar
-        if (!currentPath.startsWith(basename)) {
-          const newPath = basename + (currentPath === '/' ? '' : currentPath);
-          l.replace(
-            l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-            newPath +
-            (l.search || '') +
-            (l.hash || '')
-          );
-          return;
-        }
+        // Define os caminhos para os assets baseado no ambiente
+        document.querySelector('meta[property="og:image"]').setAttribute('content', `${basePath}/og-image.png`);
+        
+        // Adiciona os ícones dinamicamente ao head
+        const iconTypes = [
+          { rel: 'icon', type: 'image/png', href: `${basePath}/favicon.png` },
+          { rel: 'apple-touch-icon', href: `${basePath}/apple-touch-icon.png` },
+          { rel: 'shortcut icon', href: `${basePath}/favicon.ico` }
+        ];
+        
+        iconTypes.forEach(icon => {
+          const link = document.createElement('link');
+          link.rel = icon.rel;
+          if (icon.type) link.type = icon.type;
+          link.href = icon.href;
+          document.head.appendChild(link);
+        });
+        
+        // Redirecionamento para GitHub Pages
+        if (isProduction) {
+          const l = window.location;
+          const currentPath = l.pathname;
+          
+          // Se a URL não contiver o basename, redirecionar
+          if (!currentPath.startsWith(basePath)) {
+            const newPath = basePath + (currentPath === '/' ? '' : currentPath);
+            l.replace(
+              l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+              newPath +
+              (l.search || '') +
+              (l.hash || '')
+            );
+            return;
+          }
 
-        // Redirecionar 404 para index.html
-        if (currentPath.endsWith('/404.html')) {
-          l.replace(
-            l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-            basename + '/' + (l.hash || '')
-          );
+          // Redirecionar 404 para index.html
+          if (currentPath.endsWith('/404.html')) {
+            l.replace(
+              l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+              basePath + '/' + (l.hash || '')
+            );
+          }
         }
-      }(window.location))
+      })();
     </script>
   </head>
 
