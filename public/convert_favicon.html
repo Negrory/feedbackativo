@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Conversor de Favicon</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    .container {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    canvas {
+      border: 1px solid #ccc;
+      margin: 10px 0;
+    }
+    button {
+      padding: 10px 15px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .instructions {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-left: 4px solid #4CAF50;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Conversor de Favicon para FeedbackAtivo</h1>
+  
+  <div class="instructions">
+    <h3>Instruções:</h3>
+    <ol>
+      <li>Clique nos botões abaixo para gerar cada versão do favicon</li>
+      <li>Clique com o botão direito nas imagens geradas e selecione "Salvar imagem como..."</li>
+      <li>Salve cada uma com o nome apropriado na pasta public:</li>
+      <ul>
+        <li>favicon.png</li>
+        <li>apple-touch-icon.png</li>
+      </ul>
+      <li>Para o favicon.ico, use um conversor online como favicon.io para converter o PNG para ICO</li>
+    </ol>
+  </div>
+  
+  <div class="container">
+    <div>
+      <h2>Favicon Original (SVG)</h2>
+      <img src="favicon.svg" alt="Favicon SVG" width="64" height="64" id="svgImage">
+    </div>
+    
+    <div>
+      <h2>favicon.png (32x32)</h2>
+      <button onclick="generateImage(32)">Gerar favicon.png</button>
+      <canvas id="canvas32" width="32" height="32"></canvas>
+    </div>
+    
+    <div>
+      <h2>apple-touch-icon.png (180x180)</h2>
+      <button onclick="generateImage(180)">Gerar apple-touch-icon.png</button>
+      <canvas id="canvas180" width="180" height="180"></canvas>
+    </div>
+  </div>
+  
+  <script>
+    function generateImage(size) {
+      const canvas = document.getElementById(`canvas${size}`);
+      const ctx = canvas.getContext('2d');
+      const img = document.getElementById('svgImage');
+      
+      // Limpar o canvas
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Desenhar a imagem no canvas
+      ctx.drawImage(img, 0, 0, size, size);
+      
+      // Opcional: adicionar uma mensagem informativa
+      console.log(`Imagem ${size}x${size} gerada. Clique com o botão direito e selecione "Salvar imagem como..."`);
+    }
+  </script>
+</body>
+</html> 
