@@ -23,7 +23,13 @@ export default defineConfig(({ mode }) => ({
         },
         entryFileNames: 'assets/[name].[hash].js',
         chunkFileNames: 'assets/[name].[hash].js',
-        assetFileNames: 'assets/[name].[hash].[ext]'
+        assetFileNames: (assetInfo) => {
+          const fileName = assetInfo.name || '';
+          if (/\.(png|jpe?g|gif|svg|ico)$/.test(fileName)) {
+            return `[name][extname]`;
+          }
+          return `assets/[name].[hash][extname]`;
+        }
       }
     }
   },
@@ -47,10 +53,5 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
-  },
-  experimental: {
-    renderBuiltUrl(filename: string) {
-      return `/feedbackativo/assets/${filename}`
-    }
   }
 }));

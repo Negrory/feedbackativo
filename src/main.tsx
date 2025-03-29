@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { HashRouter } from 'react-router-dom'
+import { BrowserRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
 
@@ -45,10 +45,13 @@ const SafeApp = () => {
 };
 
 try {
+  const isProduction = window.location.hostname === 'negrory.github.io';
+  const basename = isProduction ? '/feedbackativo' : '/';
+  
   ReactDOM.createRoot(document.getElementById('root')!).render(
-    <HashRouter>
+    <BrowserRouter basename={basename}>
       <SafeApp />
-    </HashRouter>
+    </BrowserRouter>
   );
 } catch (error) {
   console.error('Root rendering error:', error);
