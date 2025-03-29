@@ -1,24 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
   <head>
-    <meta charset="utf-8">
-    <title>Feedback Ativo</title>
+    <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="0;url=/feedbackativo/">
     <script type="text/javascript">
-      var pathSegmentsToKeep = 1;
-
-      var l = window.location;
-      l.replace(
-        l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-        l.pathname.split('/').slice(0, 1 + pathSegmentsToKeep).join('/') + '/?/' +
-        l.pathname.slice(1).split('/').slice(pathSegmentsToKeep).join('/').replace(/&/g, '~and~') +
-        (l.search ? '&' + l.search.slice(1).replace(/&/g, '~and~') : '') +
-        l.hash
-      );
+      window.location.href = "/feedbackativo/" + 
+        window.location.pathname.replace(/^\/feedbackativo/, "");
     </script>
+    <title>Redirecionando...</title>
   </head>
   <body>
-    <noscript>
-      Para usar este aplicativo, você precisa habilitar JavaScript no seu navegador.
-    </noscript>
+    <p>Se você não for redirecionado automaticamente, 
+       <a href="/feedbackativo/">clique aqui</a>.</p>
   </body>
 </html> 
