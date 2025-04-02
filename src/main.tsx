@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { HashRouter } from 'react-router-dom'
 import App from './App'
 import './index.css'
+import { SupabaseProvider } from './contexts/SupabaseContext'
 
 // Handler de erros global
 window.addEventListener('error', (event) => {
@@ -12,9 +13,11 @@ window.addEventListener('error', (event) => {
 try {
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-      <HashRouter>
-        <App />
-      </HashRouter>
+      <SupabaseProvider>
+        <HashRouter>
+          <App />
+        </HashRouter>
+      </SupabaseProvider>
     </React.StrictMode>
   );
 } catch (error) {

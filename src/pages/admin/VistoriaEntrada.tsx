@@ -11,6 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import { useSupabase } from '@/contexts/SupabaseContext';
 import {
   Select,
   SelectContent,
@@ -36,49 +37,42 @@ import { Badge } from '@/components/ui/badge';
 
 // Tipos e interfaces
 interface Veiculo {
+  id: number;
   placa: string;
   modelo: string;
-  ano: string;
-  cor: string;
-  proprietario: string;
-  cpf: string;
-  dataEntrada: string;
-  possuiVistoria: boolean;
+  chassi: string;
+  renavam: string;
+  cpf_cnpj_cliente: string;
+  nome_cliente: string;
+  telefone_cliente: string;
+  valor_fipe: number;
+  oficina_id: number;
+  consultor_id: string;
+  nome_consultor: string;
+  email_consultor: string | null;
+  is_terceiro: boolean;
+  status: 'aguardando' | 'em_andamento' | 'finalizado' | 'atrasado';
+  data_entrada: string;
+  data_saida: string | null;
+  oficina: {
+    nome: string;
+  };
+  inspection_status: 'pending' | 'approved' | 'rejected';
 }
 
-// Dados de exemplo
-const veiculosSemVistoria: Veiculo[] = [
-  {
-    placa: "ABC1234",
-    modelo: "Toyota Corolla",
-    ano: "2021",
-    cor: "Prata",
-    proprietario: "João Silva",
-    cpf: "123.456.789-00",
-    dataEntrada: "22/04/2024",
-    possuiVistoria: false
-  },
-  {
-    placa: "DEF5678",
-    modelo: "Honda Civic",
-    ano: "2020",
-    cor: "Preto",
-    proprietario: "Maria Santos",
-    cpf: "987.654.321-00",
-    dataEntrada: "23/04/2024",
-    possuiVistoria: false
-  },
-  {
-    placa: "GHI9012",
-    modelo: "Fiat Pulse",
-    ano: "2022",
-    cor: "Vermelho",
-    proprietario: "Pedro Oliveira",
-    cpf: "456.789.123-00",
-    dataEntrada: "21/04/2024",
-    possuiVistoria: false
-  }
-];
+interface VistoriaEntrada {
+  veiculo_id: number;
+  fotos_danificadas: string[];
+  fotos_seguranca: string[];
+  kit_seguranca_presente: boolean;
+  kit_seguranca_descricao: string;
+  com_chave_ignicao: boolean;
+  observacoes: string;
+  videos: string[];
+  video_descricao: string;
+  data_vistoria: string;
+  status: 'pending' | 'approved' | 'rejected';
+}
 
 // Componente para upload de imagens
 const ImageUploader = ({ title, description, images, setImages }) => {
@@ -152,7 +146,7 @@ const ImageUploader = ({ title, description, images, setImages }) => {
   );
 };
 
-// Adicionar este componente para upload de vídeos
+// Componente para upload de vídeos
 const VideoUploader = ({ title, description, videos, setVideos }) => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -161,7 +155,6 @@ const VideoUploader = ({ title, description, videos, setVideos }) => {
     const newVideos = [...videos];
     
     files.forEach(file => {
-      // Verificar se é um formato de vídeo
       if (file.type.startsWith('video/')) {
         const reader = new FileReader();
         reader.onload = () => {
@@ -169,7 +162,7 @@ const VideoUploader = ({ title, description, videos, setVideos }) => {
             id: Date.now() + Math.random().toString(36).substring(2, 15),
             url: URL.createObjectURL(file),
             name: file.name,
-            size: (file.size / (1024 * 1024)).toFixed(2) // tamanho em MB
+            size: (file.size / (1024 * 1024)).toFixed(2)
           });
           setVideos([...newVideos]);
         };
@@ -246,6 +239,7 @@ const VideoUploader = ({ title, description, videos, setVideos }) => {
 };
 
 const VistoriaEntrada = () => {
+  const { supabase } = useSupabase();
   const navigate = useHashNavigate();
   const [veiculoSelecionado, setVeiculoSelecionado] = useState<Veiculo | null>(null);
   const [veiculos, setVeiculos] = useState<Veiculo[]>([]);
@@ -264,27 +258,32 @@ const VistoriaEntrada = () => {
   const [kitSegurancaDescricao, setKitSegurancaDescricao] = useState('');
   const [comChaveIgnicao, setComChaveIgnicao] = useState('com');
   const [observacoes, setObservacoes] = useState('');
-
-  // Adicionar este estado para o vídeo
   const [videos, setVideos] = useState([]);
   const [videoDescricao, setVideoDescricao] = useState('');
 
   useEffect(() => {
-    // Simulando uma chamada à API para buscar veículos sem vistoria
     const buscarVeiculos = async () => {
       setLoading(true);
       try {
-        // Simulando delay de rede
-        await new Promise(resolve => setTimeout(resolve, 800));
-        setVeiculos(veiculosSemVistoria);
+        let query = supabase
+          .from('veiculos')
+          .select(`
+            *,
+            oficina:oficinas (nome)
+          `)
+          .eq('status', 'aguardando');
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+        setVeiculos(data || []);
         
         // Se tiver uma placa na URL, selecionar o veículo automaticamente
         if (placaParam) {
-          const veiculoEncontrado = veiculosSemVistoria.find(v => v.placa === placaParam);
+          const veiculoEncontrado = data.find(v => v.placa === placaParam);
           if (veiculoEncontrado) {
             setVeiculoSelecionado(veiculoEncontrado);
           } else {
-            // Se não encontrar, exibir um toast de erro
             toast({
               title: "Veículo não encontrado",
               description: `Não foi possível encontrar um veículo com a placa ${placaParam} que precise de vistoria.`,
@@ -305,26 +304,7 @@ const VistoriaEntrada = () => {
     };
 
     buscarVeiculos();
-  }, [placaParam]);
-
-  // Adicionar esta função para verificar se existe um veículo de teste
-  useEffect(() => {
-    if (veiculos.length === 0 && !loading) {
-      console.log("Adicionando veículo de teste");
-      setVeiculos([
-        {
-          placa: "XYZ4321",
-          modelo: "Jeep Compass",
-          ano: "2023",
-          cor: "Branco",
-          proprietario: "Carlos Mendes",
-          cpf: "111.222.333-44",
-          dataEntrada: "24/04/2024",
-          possuiVistoria: false
-        }
-      ]);
-    }
-  }, [veiculos, loading]);
+  }, [placaParam, supabase]);
 
   const handleSelectVeiculo = (placa: string) => {
     const veiculo = veiculos.find(v => v.placa === placa);
@@ -345,7 +325,6 @@ const VistoriaEntrada = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validar campos obrigatórios com mensagens claras
     if (!veiculoSelecionado) {
       toast({
         title: "Erro",
@@ -373,33 +352,82 @@ const VistoriaEntrada = () => {
       return;
     }
 
-    // Validação para vídeo opcional, mas com aviso
-    if (videos.length === 0) {
-      toast({
-        title: "Aviso",
-        description: "Recomendamos adicionar pelo menos um vídeo do veículo para documentação completa.",
-        variant: "default",
-      });
-      
-      // Confirmação adicional antes de prosseguir sem vídeo
-      if (!window.confirm("Deseja realmente prosseguir sem adicionar um vídeo?")) {
-        return;
-      }
-    }
-
     setSubmitLoading(true);
 
     try {
-      // Simulando envio para API
-      // Os dados do vídeo (videos) e descrição (videoDescricao) seriam enviados junto
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Upload das imagens para o Supabase Storage
+      const fotosDanificadasUrls = await Promise.all(
+        imagesDanificadas.map(async (image) => {
+          const file = await fetch(image.url).then(r => r.blob());
+          const fileName = `vistoria/${veiculoSelecionado.placa}/danificadas/${Date.now()}-${Math.random().toString(36).substring(2)}.jpg`;
+          const { data, error } = await supabase.storage
+            .from('vistorias')
+            .upload(fileName, file);
+          
+          if (error) throw error;
+          return data.path;
+        })
+      );
+
+      const fotosSegurancaUrls = await Promise.all(
+        imagesSeguranca.map(async (image) => {
+          const file = await fetch(image.url).then(r => r.blob());
+          const fileName = `vistoria/${veiculoSelecionado.placa}/seguranca/${Date.now()}-${Math.random().toString(36).substring(2)}.jpg`;
+          const { data, error } = await supabase.storage
+            .from('vistorias')
+            .upload(fileName, file);
+          
+          if (error) throw error;
+          return data.path;
+        })
+      );
+
+      // Upload dos vídeos
+      const videosUrls = await Promise.all(
+        videos.map(async (video) => {
+          const file = await fetch(video.url).then(r => r.blob());
+          const fileName = `vistoria/${veiculoSelecionado.placa}/videos/${Date.now()}-${Math.random().toString(36).substring(2)}.mp4`;
+          const { data, error } = await supabase.storage
+            .from('vistorias')
+            .upload(fileName, file);
+          
+          if (error) throw error;
+          return data.path;
+        })
+      );
+
+      // Inserir registro da vistoria
+      const { error: vistoriaError } = await supabase
+        .from('vistorias_entrada')
+        .insert({
+          veiculo_id: veiculoSelecionado.id,
+          fotos_danificadas: fotosDanificadasUrls,
+          fotos_seguranca: fotosSegurancaUrls,
+          kit_seguranca_presente: kitSegurancaPresente,
+          kit_seguranca_descricao: kitSegurancaDescricao,
+          com_chave_ignicao: comChaveIgnicao === 'com',
+          observacoes: observacoes,
+          videos: videosUrls,
+          video_descricao: videoDescricao,
+          data_vistoria: new Date().toISOString(),
+          status: 'pending'
+        });
+
+      if (vistoriaError) throw vistoriaError;
+
+      // Atualizar status do veículo
+      const { error: veiculoError } = await supabase
+        .from('veiculos')
+        .update({ inspection_status: 'pending' })
+        .eq('id', veiculoSelecionado.id);
+
+      if (veiculoError) throw veiculoError;
 
       toast({
         title: "Sucesso",
         description: "Vistoria de entrada registrada com sucesso!",
       });
 
-      // Redirecionar para a página de detalhes do veículo ou lista de veículos
       navigate('/admin/veiculos');
     } catch (error) {
       console.error('Erro ao salvar vistoria:', error);
@@ -512,20 +540,40 @@ const VistoriaEntrada = () => {
                         <p>{veiculoSelecionado.modelo}</p>
                       </div>
                       <div>
-                        <Label className="text-xs text-gray-500">Ano/Cor:</Label>
-                        <p>{veiculoSelecionado.ano} - {veiculoSelecionado.cor}</p>
+                        <Label className="text-xs text-gray-500">Chassi:</Label>
+                        <p>{veiculoSelecionado.chassi}</p>
                       </div>
                       <div>
-                        <Label className="text-xs text-gray-500">Proprietário:</Label>
-                        <p>{veiculoSelecionado.proprietario}</p>
+                        <Label className="text-xs text-gray-500">Renavam:</Label>
+                        <p>{veiculoSelecionado.renavam}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-500">Cliente:</Label>
+                        <p>{veiculoSelecionado.nome_cliente}</p>
                       </div>
                       <div>
                         <Label className="text-xs text-gray-500">CPF:</Label>
-                        <p>{veiculoSelecionado.cpf}</p>
+                        <p>{veiculoSelecionado.cpf_cnpj_cliente}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-500">Telefone:</Label>
+                        <p>{veiculoSelecionado.telefone_cliente}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-500">Valor FIPE:</Label>
+                        <p>R$ {veiculoSelecionado.valor_fipe.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-500">Oficina:</Label>
+                        <p>{veiculoSelecionado.oficina.nome}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-gray-500">Consultor:</Label>
+                        <p>{veiculoSelecionado.nome_consultor}</p>
                       </div>
                       <div>
                         <Label className="text-xs text-gray-500">Data de Entrada:</Label>
-                        <p>{veiculoSelecionado.dataEntrada}</p>
+                        <p>{new Date(veiculoSelecionado.data_entrada).toLocaleDateString('pt-BR')}</p>
                       </div>
                       <div className="pt-2">
                         <Badge 

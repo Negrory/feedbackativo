@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Car, Search, AlertCircle, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { toast } from '@/hooks/use-toast';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import { useSupabase } from '@/contexts/SupabaseContext';
 
 interface VeiculoSGA {
   placa: string;
@@ -24,19 +25,19 @@ interface VeiculoSGA {
 
 interface FormData extends VeiculoSGA {
   oficina: string;
-  consultor: string;
   isTerceiro: boolean;
 }
 
 const AdicionarVeiculo = () => {
+  const { supabase } = useSupabase();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [preenchimentoManual, setPreenchimentoManual] = useState(false);
+  const [oficinas, setOficinas] = useState<Array<{ id: number; nome: string }>>([]);
   
   const [formData, setFormData] = useState<Partial<FormData>>({
     placa: '',
     oficina: '',
-    consultor: '',
     isTerceiro: false,
     modelo: '',
     chassi: '',
@@ -44,8 +45,34 @@ const AdicionarVeiculo = () => {
     nomeCliente: '',
     telefoneCliente: '',
     renavam: '',
-    valorFipe: 0
+    valorFipe: 0,
+    nome_voluntario: ''
   });
+
+  // Carregar oficinas ao montar o componente
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        // Buscar oficinas
+        const { data: oficinasData, error: oficinasError } = await supabase
+          .from('oficinas')
+          .select('id, nome')
+          .order('nome');
+
+        if (oficinasError) throw oficinasError;
+        setOficinas(oficinasData || []);
+      } catch (err) {
+        console.error('Erro ao carregar dados:', err);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar os dados das oficinas.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchData();
+  }, [supabase]);
 
   const buscarVeiculoSGA = async () => {
     if (!formData.placa) {
@@ -102,7 +129,7 @@ const AdicionarVeiculo = () => {
         telefoneCliente: veiculo.telefone ? `(${veiculo.ddd || ''}) ${veiculo.telefone}` : '',
         renavam: veiculo.renavam || '',
         valorFipe: parseFloat(veiculo.valor_fipe || '0'),
-        consultor: veiculo.nome_voluntario || '',
+        nome_voluntario: veiculo.nome_voluntario || '',
         // Mantém os valores existentes dos campos não preenchidos pela API
         oficina: formData.oficina || '',
         isTerceiro: formData.isTerceiro || false
@@ -140,7 +167,7 @@ const AdicionarVeiculo = () => {
     e.preventDefault();
     
     // Validação dos campos obrigatórios
-    if (!formData.placa || !formData.renavam || !formData.oficina || !formData.consultor) {
+    if (!formData.placa || !formData.renavam || !formData.oficina || !formData.nome_voluntario) {
       toast({
         title: "Erro",
         description: "Por favor, preencha todos os campos obrigatórios.",
@@ -152,19 +179,41 @@ const AdicionarVeiculo = () => {
     setLoading(true);
 
     try {
-      const response = await fetch('https://hook.eu2.make.com/8169vx14djaxcrf2z845db170lx0h68a', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          ...formData,
-          acao: 'salvar' // Identificador para a ação de salvar
-        })
-      });
+      // Primeiro, buscar o ID da oficina selecionada
+      const { data: oficinaData, error: oficinaError } = await supabase
+        .from('oficinas')
+        .select('id')
+        .eq('nome', formData.oficina)
+        .single();
 
-      if (!response.ok) {
-        throw new Error('Erro ao salvar os dados do veículo');
+      if (oficinaError) {
+        throw new Error('Erro ao buscar oficina');
+      }
+
+      // Preparar os dados para inserção
+      const veiculoData = {
+        placa: formData.placa,
+        modelo: formData.modelo,
+        chassi: formData.chassi,
+        renavam: formData.renavam,
+        cpf_cnpj_cliente: formData.cpfCnpj,
+        nome_cliente: formData.nomeCliente,
+        telefone_cliente: formData.telefoneCliente,
+        valor_fipe: formData.valorFipe,
+        oficina_id: oficinaData.id,
+        consultor_id: formData.nome_voluntario, // Usando o nome_voluntario como ID
+        nome_consultor: formData.nome_voluntario, // Usando o nome_voluntario como nome
+        is_terceiro: formData.isTerceiro,
+        status: 'aguardando'
+      };
+
+      // Inserir o veículo no banco de dados
+      const { error: insertError } = await supabase
+        .from('veiculos')
+        .insert([veiculoData]);
+
+      if (insertError) {
+        throw insertError;
       }
 
       toast({
@@ -176,7 +225,6 @@ const AdicionarVeiculo = () => {
       setFormData({
         placa: '',
         oficina: '',
-        consultor: '',
         isTerceiro: false,
         modelo: '',
         chassi: '',
@@ -184,7 +232,8 @@ const AdicionarVeiculo = () => {
         nomeCliente: '',
         telefoneCliente: '',
         renavam: '',
-        valorFipe: 0
+        valorFipe: 0,
+        nome_voluntario: ''
       });
 
     } catch (err) {
@@ -270,9 +319,11 @@ const AdicionarVeiculo = () => {
                         <SelectValue placeholder="Selecione a oficina" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="central">Oficina Central</SelectItem>
-                        <SelectItem value="sul">Oficina Sul</SelectItem>
-                        <SelectItem value="norte">Oficina Norte</SelectItem>
+                        {oficinas.map((oficina) => (
+                          <SelectItem key={oficina.id} value={oficina.nome}>
+                            {oficina.nome}
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
@@ -283,12 +334,10 @@ const AdicionarVeiculo = () => {
                       <span className="text-red-500">*</span>
                     </Label>
                     <Input
-                      id="consultor"
-                      value={formData.consultor}
-                      onChange={(e) => handleInputChange('consultor', e.target.value)}
+                      value={formData.nome_voluntario}
+                      onChange={(e) => handleInputChange('nome_voluntario', e.target.value)}
+                      disabled={!preenchimentoManual && !formData.nome_voluntario}
                       placeholder="Nome do consultor"
-                      disabled={!preenchimentoManual && !formData.consultor}
-                      required
                     />
                   </div>
 
@@ -382,7 +431,7 @@ const AdicionarVeiculo = () => {
                 <Button
                   type="submit"
                   className="w-full"
-                  disabled={!formData.placa || !formData.renavam || !formData.oficina || !formData.consultor}
+                  disabled={!formData.placa || !formData.renavam || !formData.oficina || !formData.nome_voluntario}
                 >
                   Adicionar Veículo
                 </Button>

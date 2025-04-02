@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Car, Calendar, Wrench, AlertCircle, MapPin, CheckCircle2, Clock, Image, ArrowRight, ShieldCheck, Settings, Camera } from 'lucide-react';
+import { Car, Calendar, Wrench, AlertCircle, MapPin, CheckCircle2, Clock, Image, ArrowRight, ShieldCheck, Settings, Camera, LogIn } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { Timeline, TimelineItem } from '@/components/ui/Timeline';
@@ -8,6 +8,9 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useSupabase } from '@/contexts/SupabaseContext';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Link } from 'react-router-dom';
 
 // Mock data for demonstration
 const mockVehicleData = {
@@ -80,6 +83,7 @@ const mockTimelineItems: TimelineItem[] = [
 ];
 
 const Consulta = () => {
+  const { user } = useSupabase();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResult, setSearchResult] = useState<null | typeof mockVehicleData>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -120,7 +124,7 @@ const Consulta = () => {
                 Acompanhe em tempo real o status do reparo do seu veículo
               </p>
             </div>
-            
+          
             <Card className="mb-10 border-0 shadow-xl glass-card overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-cyan-400/10 rounded-lg"></div>
               <CardContent className="pt-6 relative z-10">

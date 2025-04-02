@@ -1,8 +1,8 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { AlertCircle, Clock, CheckCircle } from 'lucide-react';
+import { AlertCircle, Clock, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react';
 
-export type StatusType = 'delayed' | 'inprogress' | 'completed';
+export type StatusType = 'aguardando' | 'em_andamento' | 'finalizado' | 'atrasado' | 'pendente' | 'aprovado' | 'rejeitado';
 
 interface StatusBadgeProps {
   status: StatusType;
@@ -12,26 +12,54 @@ interface StatusBadgeProps {
 }
 
 const statusConfig = {
-  delayed: {
+  aguardando: {
+    label: 'Aguardando Vistoria',
+    bg: 'bg-yellow-100',
+    text: 'text-yellow-700',
+    icon: Clock,
+    iconClass: 'text-yellow-700'
+  },
+  em_andamento: {
+    label: 'Em Andamento',
+    bg: 'bg-blue-100',
+    text: 'text-blue-700',
+    icon: Loader2,
+    iconClass: 'text-blue-700'
+  },
+  finalizado: {
+    label: 'Finalizado',
+    bg: 'bg-green-100',
+    text: 'text-green-700',
+    icon: CheckCircle2,
+    iconClass: 'text-green-700'
+  },
+  atrasado: {
     label: 'Atrasado',
     bg: 'bg-red-100',
     text: 'text-red-700',
     icon: AlertCircle,
     iconClass: 'text-red-700'
   },
-  inprogress: {
-    label: 'Em Andamento',
-    bg: 'bg-cyan-100',
-    text: 'text-cyan-700',
+  pendente: {
+    label: 'Pendente',
+    bg: 'bg-gray-100',
+    text: 'text-gray-700',
     icon: Clock,
-    iconClass: 'text-cyan-700'
+    iconClass: 'text-gray-700'
   },
-  completed: {
-    label: 'Finalizado',
+  aprovado: {
+    label: 'Aprovado',
     bg: 'bg-emerald-100',
     text: 'text-emerald-700',
-    icon: CheckCircle,
+    icon: CheckCircle2,
     iconClass: 'text-emerald-700'
+  },
+  rejeitado: {
+    label: 'Rejeitado',
+    bg: 'bg-red-100',
+    text: 'text-red-700',
+    icon: AlertTriangle,
+    iconClass: 'text-red-700'
   }
 };
 

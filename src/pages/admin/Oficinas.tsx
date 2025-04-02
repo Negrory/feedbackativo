@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useHashNavigate } from '@/router/useHashNavigate';
+import { useSupabase } from '@/contexts/SupabaseContext';
 import {
   Wrench,
   Building,
@@ -55,7 +56,7 @@ import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
 
 interface Oficina {
-  id: string;
+  id: number;
   nome: string;
   cnpj: string;
   telefone: string;
@@ -65,77 +66,9 @@ interface Oficina {
   estado: string;
   status: 'ativa' | 'ociosa' | 'analise';
   servicos: string[];
-  veiculosAtivos: number;
+  veiculos_ativos: number;
+  responsavel: string;
 }
-
-// Dados simulados
-const oficinasTeste: Oficina[] = [
-  {
-    id: '1',
-    nome: 'Oficina Central São Paulo',
-    cnpj: '12.345.678/0001-90',
-    telefone: '(11) 98765-4321',
-    email: 'contato@oficinacentralsp.com.br',
-    endereco: 'Av. Paulista, 1000',
-    cidade: 'São Paulo',
-    estado: 'SP',
-    status: 'ativa',
-    servicos: ['Funilaria', 'Pintura', 'Mecânica'],
-    veiculosAtivos: 42
-  },
-  {
-    id: '2',
-    nome: 'Auto Center Rio',
-    cnpj: '23.456.789/0001-01',
-    telefone: '(21) 97654-3210',
-    email: 'atendimento@autocenterrio.com.br',
-    endereco: 'Rua Copacabana, 500',
-    cidade: 'Rio de Janeiro',
-    estado: 'RJ',
-    status: 'ociosa',
-    servicos: ['Funilaria', 'Pintura', 'Elétrica'],
-    veiculosAtivos: 0
-  },
-  {
-    id: '3',
-    nome: 'Oficina Belo Horizonte',
-    cnpj: '34.567.890/0001-12',
-    telefone: '(31) 96543-2109',
-    email: 'contato@oficinamg.com.br',
-    endereco: 'Av. Afonso Pena, 2000',
-    cidade: 'Belo Horizonte',
-    estado: 'MG',
-    status: 'ativa',
-    servicos: ['Mecânica', 'Elétrica', 'Ar Condicionado'],
-    veiculosAtivos: 28
-  },
-  {
-    id: '4',
-    nome: 'Sul Reparos Automotivos',
-    cnpj: '45.678.901/0001-23',
-    telefone: '(51) 95432-1098',
-    email: 'contato@sulreparos.com.br',
-    endereco: 'Rua dos Andradas, 1500',
-    cidade: 'Porto Alegre',
-    estado: 'RS',
-    status: 'analise',
-    servicos: ['Funilaria', 'Pintura'],
-    veiculosAtivos: 0
-  },
-  {
-    id: '5',
-    nome: 'Norte Reparo Center',
-    cnpj: '56.789.012/0001-34',
-    telefone: '(92) 94321-0987',
-    email: 'atendimento@nortereparo.com.br',
-    endereco: 'Av. Djalma Batista, 1800',
-    cidade: 'Manaus',
-    estado: 'AM',
-    status: 'ativa',
-    servicos: ['Funilaria', 'Pintura', 'Mecânica', 'Elétrica'],
-    veiculosAtivos: 15
-  }
-];
 
 // Opções para serviços
 const servicosOptions = [
@@ -151,6 +84,7 @@ const servicosOptions = [
 
 const Oficinas = () => {
   const navigate = useHashNavigate();
+  const { supabase } = useSupabase();
   const [oficinas, setOficinas] = useState<Oficina[]>([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -172,7 +106,8 @@ const Oficinas = () => {
     cidade: '',
     estado: '',
     status: 'ativa' as 'ativa' | 'ociosa' | 'analise',
-    servicos: [] as string[]
+    servicos: [] as string[],
+    responsavel: ''
   });
 
   // Métricas
@@ -182,27 +117,33 @@ const Oficinas = () => {
     veiculosAtivos: 0
   });
 
-  // Carrega dados simulados
+  // Carrega dados do Supabase
   const carregarOficinas = async () => {
     setLoading(true);
     try {
-      // Simulando delay de rede
-      await new Promise(resolve => setTimeout(resolve, 500));
+      let query = supabase
+        .from('oficinas')
+        .select('*')
+        .order('nome');
 
-      // Filtragem local dos dados de teste
-      let oficinasFiltradas = oficinasTeste.filter(oficina => {
-        const matchNome = oficina.nome.toLowerCase().includes(filtros.nome.toLowerCase());
-        const matchStatus = !filtros.status || filtros.status === 'todos' || oficina.status === filtros.status;
-        
-        return matchNome && matchStatus;
-      });
+      // Aplicar filtros se existirem
+      if (filtros.nome) {
+        query = query.ilike('nome', `%${filtros.nome}%`);
+      }
+      if (filtros.status && filtros.status !== 'todos') {
+        query = query.eq('status', filtros.status);
+      }
 
-      setOficinas(oficinasFiltradas);
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      setOficinas(data || []);
 
       // Calcular métricas
-      const oficinasAtivas = oficinasTeste.filter(o => o.status === 'ativa').length;
-      const oficinasOciosas = oficinasTeste.filter(o => o.status === 'ociosa').length;
-      const veiculosAtivos = oficinasTeste.reduce((sum, o) => sum + o.veiculosAtivos, 0);
+      const oficinasAtivas = data?.filter(o => o.status === 'ativa').length || 0;
+      const oficinasOciosas = data?.filter(o => o.status === 'ociosa').length || 0;
+      const veiculosAtivos = data?.reduce((sum, o) => sum + (o.veiculos_ativos || 0), 0) || 0;
 
       setMetricas({
         oficinasAtivas,
@@ -280,7 +221,8 @@ const Oficinas = () => {
       cidade: oficina.cidade,
       estado: oficina.estado,
       status: oficina.status,
-      servicos: oficina.servicos
+      servicos: oficina.servicos,
+      responsavel: oficina.responsavel
     });
     setIsModalOpen(true);
   };
@@ -296,18 +238,20 @@ const Oficinas = () => {
       cidade: '',
       estado: '',
       status: 'ativa',
-      servicos: []
+      servicos: [],
+      responsavel: ''
     });
     setIsModalOpen(true);
   };
 
-  const handleExcluirOficina = async (id: string) => {
+  const handleExcluirOficina = async (id: number) => {
     try {
-      // Simulando delay de rede
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Removendo localmente
-      setOficinas(prev => prev.filter(o => o.id !== id));
+      const { error } = await supabase
+        .from('oficinas')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
       
       toast({
         title: "Sucesso",
@@ -327,7 +271,7 @@ const Oficinas = () => {
 
   const handleSalvarOficina = async () => {
     // Validação dos campos obrigatórios
-    if (!formData.nome || !formData.cnpj || !formData.telefone || !formData.endereco) {
+    if (!formData.nome || !formData.cnpj || !formData.telefone || !formData.endereco || !formData.responsavel) {
       toast({
         title: "Erro",
         description: "Por favor, preencha todos os campos obrigatórios.",
@@ -337,14 +281,32 @@ const Oficinas = () => {
     }
 
     try {
-      // Simulando delay de rede
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      const oficinaData = {
+        nome: formData.nome.trim(),
+        cnpj: formData.cnpj.trim(),
+        telefone: formData.telefone.trim(),
+        email: formData.email?.trim() || null,
+        endereco: formData.endereco.trim(),
+        cidade: formData.cidade?.trim() || null,
+        estado: formData.estado?.trim() || null,
+        status: formData.status,
+        servicos: formData.servicos || [],
+        veiculos_ativos: selectedOficina?.veiculos_ativos || 0,
+        responsavel: formData.responsavel.trim()
+      };
+
       if (selectedOficina) {
         // Atualizando oficina existente
-        setOficinas(prev => prev.map(o => 
-          o.id === selectedOficina.id ? { ...o, ...formData, id: o.id, veiculosAtivos: o.veiculosAtivos } : o
-        ));
+        const { data, error } = await supabase
+          .from('oficinas')
+          .update(oficinaData)
+          .eq('id', selectedOficina.id)
+          .select();
+
+        if (error) {
+          console.error('Erro ao atualizar oficina:', error);
+          throw error;
+        }
         
         toast({
           title: "Sucesso",
@@ -352,13 +314,15 @@ const Oficinas = () => {
         });
       } else {
         // Adicionando nova oficina
-        const novaOficina: Oficina = {
-          ...formData,
-          id: Math.random().toString(36).substr(2, 9),
-          veiculosAtivos: 0
-        };
-        
-        setOficinas(prev => [...prev, novaOficina]);
+        const { data, error } = await supabase
+          .from('oficinas')
+          .insert([oficinaData])
+          .select();
+
+        if (error) {
+          console.error('Erro ao inserir oficina:', error);
+          throw error;
+        }
         
         toast({
           title: "Sucesso",
@@ -368,11 +332,11 @@ const Oficinas = () => {
       
       setIsModalOpen(false);
       carregarOficinas();
-    } catch (err) {
-      console.error('Erro:', err);
+    } catch (err: any) {
+      console.error('Erro ao salvar oficina:', err);
       toast({
         title: "Erro",
-        description: "Não foi possível salvar a oficina.",
+        description: err.message || "Não foi possível salvar a oficina. Verifique os dados e tente novamente.",
         variant: "destructive",
       });
     }
@@ -543,7 +507,7 @@ const Oficinas = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {oficina.veiculosAtivos}
+                      {oficina.veiculos_ativos}
                     </TableCell>
                     <TableCell>
                       <div className="flex space-x-2">
@@ -574,8 +538,8 @@ const Oficinas = () => {
       
       {/* Modal de Adicionar/Editar Oficina - Com Espaçamento Melhorado */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-3xl">
-          <DialogHeader className="space-y-2 mb-2">
+        <DialogContent className="max-w-3xl h-[90vh] flex flex-col">
+          <DialogHeader className="flex-none">
             <DialogTitle className="text-xl">
               {selectedOficina ? 'Editar Oficina' : 'Adicionar Nova Oficina'}
             </DialogTitle>
@@ -584,177 +548,192 @@ const Oficinas = () => {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="space-y-5 py-2">
-            {/* Seção de Informações Básicas */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Building className="h-4 w-4" />
-                Informações Básicas
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="nome" className="text-sm mb-1.5 inline-block">
-                    Nome da Oficina <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="nome"
-                    placeholder="Nome da oficina"
-                    value={formData.nome}
-                    onChange={(e) => handleInputChange('nome', e.target.value)}
-                    required
-                  />
-                </div>
+          <div className="flex-1 overflow-y-auto py-4">
+            <div className="space-y-5">
+              {/* Seção de Informações Básicas */}
+              <div className="space-y-4">
+                <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Building className="h-4 w-4" />
+                  Informações Básicas
+                </h3>
                 
-                <div>
-                  <Label htmlFor="cnpj" className="text-sm mb-1.5 inline-block">
-                    CNPJ <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="cnpj"
-                    placeholder="XX.XXX.XXX/XXXX-XX"
-                    value={formData.cnpj}
-                    onChange={(e) => handleCnpjChange(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-            
-            {/* Seção de Contato */}
-            <div className="space-y-4 pt-2">
-              <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                Informações de Contato
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="telefone" className="text-sm mb-1.5 inline-block">
-                    Telefone <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="telefone"
-                    placeholder="(XX) XXXXX-XXXX"
-                    value={formData.telefone}
-                    onChange={(e) => handleTelefoneChange(e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="email" className="text-sm mb-1.5 inline-block">
-                    E-mail
-                  </Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="email@exemplo.com"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-            
-            {/* Seção de Endereço */}
-            <div className="space-y-4 pt-2">
-              <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                Endereço
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div className="md:col-span-2">
-                  <Label htmlFor="endereco" className="text-sm mb-1.5 inline-block">
-                    Endereço <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="endereco"
-                    placeholder="Rua, número, complemento"
-                    value={formData.endereco}
-                    onChange={(e) => handleInputChange('endereco', e.target.value)}
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="cidade" className="text-sm mb-1.5 inline-block">
-                    Cidade
-                  </Label>
-                  <Input
-                    id="cidade"
-                    placeholder="Cidade"
-                    value={formData.cidade}
-                    onChange={(e) => handleInputChange('cidade', e.target.value)}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="estado" className="text-sm mb-1.5 inline-block">
-                    Estado
-                  </Label>
-                  <Input
-                    id="estado"
-                    placeholder="Estado"
-                    value={formData.estado}
-                    onChange={(e) => handleInputChange('estado', e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-            
-            {/* Seção de Status e Serviços */}
-            <div className="space-y-4 pt-2">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="status" className="text-sm mb-1.5 inline-block">
-                    Status <span className="text-red-500">*</span>
-                  </Label>
-                  <Select
-                    value={formData.status}
-                    onValueChange={(value: 'ativa' | 'ociosa' | 'analise') => handleInputChange('status', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione o status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ativa">Ativa</SelectItem>
-                      <SelectItem value="ociosa">Ociosa</SelectItem>
-                      <SelectItem value="analise">Em Análise</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="nome" className="text-sm mb-1.5 inline-block">
+                      Nome da Oficina <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="nome"
+                      placeholder="Nome da oficina"
+                      value={formData.nome}
+                      onChange={(e) => handleInputChange('nome', e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="cnpj" className="text-sm mb-1.5 inline-block">
+                      CNPJ <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="cnpj"
+                      placeholder="XX.XXX.XXX/XXXX-XX"
+                      value={formData.cnpj}
+                      onChange={(e) => handleCnpjChange(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
               </div>
               
-              {/* Serviços Oferecidos */}
-              <div className="pt-2">
-                <Label className="text-sm mb-3 inline-block">
-                  Serviços Oferecidos
-                </Label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                  {servicosOptions.map(servico => (
-                    <div key={servico.id} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={servico.id} 
-                        checked={formData.servicos.includes(servico.label)}
-                        onCheckedChange={(checked) => handleServicoChange(servico.id, checked as boolean)}
-                      />
-                      <Label htmlFor={servico.id} className="cursor-pointer text-sm">
-                        {servico.label}
-                      </Label>
-                    </div>
-                  ))}
+              {/* Seção de Contato */}
+              <div className="space-y-4 pt-2">
+                <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <Phone className="h-4 w-4" />
+                  Informações de Contato
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="telefone" className="text-sm mb-1.5 inline-block">
+                      Telefone <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="telefone"
+                      placeholder="(XX) XXXXX-XXXX"
+                      value={formData.telefone}
+                      onChange={(e) => handleTelefoneChange(e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="email" className="text-sm mb-1.5 inline-block">
+                      E-mail
+                    </Label>
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="email@exemplo.com"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange('email', e.target.value)}
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="responsavel" className="text-sm mb-1.5 inline-block">
+                      Responsável <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="responsavel"
+                      placeholder="Nome do responsável"
+                      value={formData.responsavel}
+                      onChange={(e) => handleInputChange('responsavel', e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Seção de Endereço */}
+              <div className="space-y-4 pt-2">
+                <h3 className="text-sm font-medium text-muted-foreground flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Endereço
+                </h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div className="md:col-span-2">
+                    <Label htmlFor="endereco" className="text-sm mb-1.5 inline-block">
+                      Endereço <span className="text-red-500">*</span>
+                    </Label>
+                    <Input
+                      id="endereco"
+                      placeholder="Rua, número, complemento"
+                      value={formData.endereco}
+                      onChange={(e) => handleInputChange('endereco', e.target.value)}
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="cidade" className="text-sm mb-1.5 inline-block">
+                      Cidade
+                    </Label>
+                    <Input
+                      id="cidade"
+                      placeholder="Cidade"
+                      value={formData.cidade}
+                      onChange={(e) => handleInputChange('cidade', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div>
+                    <Label htmlFor="estado" className="text-sm mb-1.5 inline-block">
+                      Estado
+                    </Label>
+                    <Input
+                      id="estado"
+                      placeholder="Estado"
+                      value={formData.estado}
+                      onChange={(e) => handleInputChange('estado', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Seção de Status e Serviços */}
+              <div className="space-y-4 pt-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="status" className="text-sm mb-1.5 inline-block">
+                      Status <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      value={formData.status}
+                      onValueChange={(value: 'ativa' | 'ociosa' | 'analise') => handleInputChange('status', value)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ativa">Ativa</SelectItem>
+                        <SelectItem value="ociosa">Ociosa</SelectItem>
+                        <SelectItem value="analise">Em Análise</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                
+                {/* Serviços Oferecidos */}
+                <div className="pt-2">
+                  <Label className="text-sm mb-3 inline-block">
+                    Serviços Oferecidos
+                  </Label>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    {servicosOptions.map(servico => (
+                      <div key={servico.id} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={servico.id} 
+                          checked={formData.servicos.includes(servico.label)}
+                          onCheckedChange={(checked) => handleServicoChange(servico.id, checked as boolean)}
+                        />
+                        <Label htmlFor={servico.id} className="cursor-pointer text-sm">
+                          {servico.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
           
-          <DialogFooter className="mt-6 flex-col sm:flex-row gap-2">
+          <DialogFooter className="flex-none border-t pt-4">
             <Button variant="outline" onClick={() => setIsModalOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSalvarOficina} disabled={!formData.nome || !formData.cnpj || !formData.telefone || !formData.endereco}>
+            <Button onClick={handleSalvarOficina} disabled={!formData.nome || !formData.cnpj || !formData.telefone || !formData.endereco || !formData.responsavel}>
               {selectedOficina ? 'Salvar Alterações' : 'Adicionar Oficina'}
             </Button>
           </DialogFooter>
